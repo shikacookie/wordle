@@ -1,0 +1,46 @@
+{
+  "ModelVersion": 2,
+  "Fingerprint": "F67E789789E485FFA24CFA3D2409EBB8C74D0571D36F8F2C46AEB0B545A94884",
+  "Recommendations": [
+    {
+      "Word": "TEARS",
+      "FirstBits": 5.989259549402059,
+      "ExpectedSecondBits": 4.321490954513777,
+      "ConvergenceBonus": 0.0002221474251093907,
+      "IsCandidate": true,
+      "ForcedBoardCount": 0
+    },
+    {
+      "Word": "TERAS",
+      "FirstBits": 6.0473974156973895,
+      "ExpectedSecondBits": 4.263273763719867,
+      "ConvergenceBonus": 0.0002524402558061258,
+      "IsCandidate": true,
+      "ForcedBoardCount": 0
+    },
+    {
+      "Word": "TALES",
+      "FirstBits": 6.0141813239030935,
+      "ExpectedSecondBits": 4.284281822571019,
+      "ConvergenceBonus": 0.00018175698418041063,
+      "IsCandidate": true,
+      "ForcedBoardCount": 0
+    },
+    {
+      "Word": "TARES",
+      "FirstBits": 6.159376455792671,
+      "ExpectedSecondBits": 4.134487324668755,
+      "ConvergenceBonus": 0.00027263547627061585,
+      "IsCandidate": true,
+      "ForcedBoardCount": 0
+    },
+    {
+      "Word": "SANER",
+      "FirstBits": 5.987262504109074,
+      "ExpectedSecondBits": 4.294651180554297,
+      "ConvergenceBonus": 0.00023224503534163574,
+      "IsCandidate": true,
+      "ForcedBoardCount": 0
+    }
+  ]
+}

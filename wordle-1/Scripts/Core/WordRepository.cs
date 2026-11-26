@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 using Godot;
 
 namespace WordleResearch.Core;
@@ -11,7 +12,9 @@ public sealed class WordRepository
     public const byte SolvedPattern = PatternCount - 1;
     public const string DefaultPath = "res://word_list.json";
 
-    private static WordRepository _shared;
+    private const int CachedRows = 128;
+    private static readonly Lazy<WordRepository> Shared = new(() => Load(DefaultPath));
+    private readonly Lazy<int[]> _patternMatrix;
     private readonly Dictionary<string, int> _indices;
     internal Word[] Entries { get; }
     public int Count => Entries.Length;
@@ -20,10 +23,27 @@ public sealed class WordRepository
     {
         Entries = words.ToArray();
         _indices = indices;
+        _patternMatrix = new Lazy<int[]>(() => new int[Math.Min(Count, CachedRows) * Count]);
     }
 
     // Load on the main thread; the solver only reads the resulting managed data.
-    public static WordRepository LoadShared() => _shared ??= Load(DefaultPath);
+    public static WordRepository LoadShared() => Shared.Value;
+
+    internal int[] PreparePatternMatrix() => _patternMatrix.Value;
+
+    internal byte GetCachedPattern(int[] matrix, int guess, int answer)
+    {
+        // Each cell packs a guess tag and its feedback into one atomic value. Colliding
+        // rows can replace each other, but cannot return another word's feedback.
+        int offset = (guess % CachedRows) * Count + answer;
+        int tag = (guess + 1) << 8;
+        int entry = Volatile.Read(ref matrix[offset]);
+        if ((entry & ~255) == tag)
+            return (byte)entry;
+        byte pattern = EncodePattern(Entries[guess], Entries[answer]);
+        Volatile.Write(ref matrix[offset], tag | pattern);
+        return pattern;
+    }
 
     public static WordRepository Load(string path)
     {

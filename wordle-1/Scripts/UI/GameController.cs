@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +27,9 @@ public partial class GameController : Control
     private bool _analysisQueued;
     // Scene instances can overlap briefly during a restart; only one may run the solver.
     private static readonly SemaphoreSlim AnalysisGate = new(1, 1);
+    private static readonly Dictionary<int, GuessRecommendation[]> OpeningHints = new();
+    private static bool _checkedOpeningData;
+    private static GuessRecommendation[] _singleBoardOpening;
     private int _focus;
     private int _usedGuesses;
     private int _maxGuesses;
@@ -406,7 +410,30 @@ public partial class GameController : Control
             return;
         }
 
-        _hint.SetRecommendationStatus("THINKING AHEAD…");
+        bool opening = _usedGuesses == 0;
+        int boardCount = _boards.Length;
+        if (opening && !_checkedOpeningData)
+        {
+            _singleBoardOpening = OpeningRecommendations.TryLoad(_repository);
+            _checkedOpeningData = true;
+        }
+        if (opening && _singleBoardOpening != null && !OpeningHints.ContainsKey(boardCount))
+        {
+            // All opening boards have the same posterior; each metric scales by the board count.
+            OpeningHints[boardCount] = _singleBoardOpening.Select(guess => guess with
+            {
+                FirstBits = guess.FirstBits * boardCount,
+                ExpectedSecondBits = guess.ExpectedSecondBits * boardCount,
+                ConvergenceBonus = guess.ConvergenceBonus * boardCount
+            }).ToArray();
+        }
+        if (opening && OpeningHints.TryGetValue(boardCount, out var cached))
+        {
+            _hint.ShowRecommendations(cached);
+            return;
+        }
+
+        _hint.SetRecommendationStatus(opening ? "ANALYZING THE WORD LIST…" : "THINKING AHEAD…");
         using var request = new CancellationTokenSource();
         _analysis = request;
         var token = request.Token;
@@ -421,6 +448,8 @@ public partial class GameController : Control
             // Godot's synchronization context resumes this continuation on the main thread.
             if (token.IsCancellationRequested || !IsInsideTree())
                 return;
+            if (opening)
+                OpeningHints[boardCount] = result;
             _hint.ShowRecommendations(result);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested)
