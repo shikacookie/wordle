@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Godot;
 using WordleResearch.Core;
 
@@ -17,6 +19,8 @@ public partial class PrototypeGame : Control
     private Label _status;
     private LineEdit _draft;
     private int _used;
+    private Label _hints;
+    private CancellationTokenSource _analysis;
 
     public override void _Ready()
     {
@@ -35,6 +39,10 @@ public partial class PrototypeGame : Control
         _menu.AddChild(modes);
         foreach (int count in GameConfig.BoardCounts)
             AddButton(modes, count.ToString(), () => Start(count));
+        var assist = new CheckButton { Text = "AI assist", ButtonPressed = GameConfig.EnableAiAssist,
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter };
+        assist.Toggled += value => GameConfig.EnableAiAssist = value;
+        _menu.AddChild(assist);
         _content = new VBoxContainer { SizeFlagsVertical = SizeFlags.ExpandFill, Visible = false };
         stack.AddChild(_content);
     }
@@ -74,7 +82,10 @@ public partial class PrototypeGame : Control
         board.AddChild(scroll);
         _grid = new GridContainer { Columns = GameConfig.WordLength };
         scroll.AddChild(_grid);
-        top.AddChild(new PanelContainer { CustomMinimumSize = new Vector2(270, 0) });
+        var side = new PanelContainer { CustomMinimumSize = new Vector2(270, 0) };
+        top.AddChild(side);
+        _hints = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+        side.AddChild(_hints);
 
         var keyboard = new VBoxContainer();
         content.AddChild(keyboard);
@@ -102,6 +113,7 @@ public partial class PrototypeGame : Control
             }
         }
         Render();
+        RefreshHints();
         _draft.GrabFocus();
     }
 
@@ -119,6 +131,45 @@ public partial class PrototypeGame : Control
         _draft.Clear();
         _used++;
         Render();
+        RefreshHints();
+    }
+
+    public override void _ExitTree() => _analysis?.Cancel();
+
+    private async void RefreshHints()
+    {
+        if (!GameConfig.EnableAiAssist)
+            return;
+        _analysis?.Cancel();
+        if (!_draft.Editable)
+        {
+            _hints.Text = "Game over";
+            return;
+        }
+
+        using var request = new CancellationTokenSource();
+        _analysis = request;
+        var token = request.Token;
+        var states = _boards.Where(board => !board.IsSolved).Select(board => board.SnapshotCandidates()).ToArray();
+        _hints.Text = "Analyzing…";
+        try
+        {
+            var hints = await Task.Run(() => new EntropySolver(_words).Analyze(states, token), token);
+            if (!token.IsCancellationRequested && IsInsideTree())
+                _hints.Text = string.Join("\n", hints.Select(hint => $"{hint.Word}  {hint.Bits:F2} bits"));
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+        catch (Exception error)
+        {
+            if (!token.IsCancellationRequested && IsInsideTree())
+                _hints.Text = "Analysis failed";
+            GD.PushError(error.ToString());
+        }
+        finally
+        {
+            if (_analysis == request)
+                _analysis = null;
+        }
     }
 
     private void Render()
