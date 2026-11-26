@@ -19,12 +19,48 @@ public sealed class EntropySolver
         for (int guess = 0; guess < _words.Count; guess++)
         {
             token.ThrowIfCancellationRequested();
-            double bits = 0;
+            double firstBits = 0, expectedSecondBits = 0;
             foreach (var board in boards)
-                bits += Entropy(Partition(guess, board, token), board.Length);
-            scores.Add(new GuessRecommendation(_words.GetWord(guess), bits, 0));
+            {
+                var branches = Partition(guess, board, token);
+                firstBits += Entropy(branches, board.Length);
+                foreach (var branch in branches.Values)
+                    if (branch.Count > 1)
+                        expectedSecondBits += (double)branch.Count / board.Length * BestFuture(branch, 1, token);
+            }
+            scores.Add(new GuessRecommendation(_words.GetWord(guess), firstBits, expectedSecondBits));
         }
         return scores.OrderByDescending(score => score.Bits).Take(5).ToArray();
+    }
+
+    private double BestFuture(IReadOnlyList<int> states, int depth, CancellationToken token)
+    {
+        if (depth == 0 || states.Count <= 1)
+            return 0;
+        double best = 0;
+        for (int guess = 0; guess < _words.Count; guess++)
+        {
+            token.ThrowIfCancellationRequested();
+            var branches = Partition(guess, states, token);
+            double expected = Entropy(branches, states.Count);
+            foreach (var branch in branches.Values)
+                expected += (double)branch.Count / states.Count * BestFuture(branch, depth - 1, token);
+            best = Math.Max(best, expected);
+        }
+        return best;
+    }
+
+    public double[] GetLetterProbabilities(int[] candidates)
+    {
+        var probabilities = new double[26];
+        foreach (int candidate in candidates)
+        {
+            uint mask = _words.Entries[candidate].LetterMask;
+            for (int letter = 0; letter < probabilities.Length; letter++)
+                if ((mask & (1u << letter)) != 0)
+                    probabilities[letter] += 1.0 / candidates.Length;
+        }
+        return probabilities;
     }
 
     private Dictionary<byte, List<int>> Partition(int guess, IReadOnlyList<int> candidates, CancellationToken token)
@@ -56,4 +92,5 @@ public sealed class EntropySolver
 public readonly record struct GuessRecommendation(string Word, double FirstBits, double ExpectedSecondBits)
 {
     public double Bits => FirstBits + ExpectedSecondBits;
+    public int ForcedBoardCount => 0;
 }

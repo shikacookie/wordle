@@ -20,6 +20,7 @@ public partial class PrototypeGame : Control
     private LineEdit _draft;
     private int _used;
     private Label _hints;
+    private Label _metrics;
     private CancellationTokenSource _analysis;
 
     public override void _Ready()
@@ -84,8 +85,12 @@ public partial class PrototypeGame : Control
         scroll.AddChild(_grid);
         var side = new PanelContainer { CustomMinimumSize = new Vector2(270, 0) };
         top.AddChild(side);
+        var hints = new VBoxContainer();
+        side.AddChild(hints);
+        _metrics = new Label();
+        hints.AddChild(_metrics);
         _hints = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        side.AddChild(_hints);
+        hints.AddChild(_hints);
 
         var keyboard = new VBoxContainer();
         content.AddChild(keyboard);
@@ -182,6 +187,7 @@ public partial class PrototypeGame : Control
         _status.Text = $"Board {_focus + 1}/{_boards.Length} · Guess {_used}/{GameConfig.MaxGuesses}"
             + (Board.IsSolved ? " · Solved" : _used >= GameConfig.MaxGuesses ? $" · Answer: {Board.Answer}" : "");
         _draft.Editable = _boards.Any(board => !board.IsSolved) && _used < GameConfig.MaxGuesses;
+        _metrics.Text = GameConfig.EnableAiAssist ? $"Ω = {Board.CandidateCount:N0} · S = {Math.Log2(Board.CandidateCount):F2} bits" : "";
         for (int row = 0; row < GameConfig.MaxGuesses; row++)
         for (int col = 0; col < GameConfig.WordLength; col++)
         {
