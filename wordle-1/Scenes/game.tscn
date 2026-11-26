@@ -1,10 +1,260 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://Scripts/UI/PrototypeGame.cs" id="1"]
+[ext_resource type="Script" path="res://Scripts/UI/GameController.cs" id="1"]
+[ext_resource type="Script" path="res://Scripts/UI/AiHintPanel.cs" id="2"]
+[ext_resource type="Script" path="res://Scripts/UI/VirtualKeyboard.cs" id="3"]
+[ext_resource type="Script" path="res://Scripts/UI/TactileButton.cs" id="4"]
 
 [node name="Game" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0.984314, 0.952941, 0.960784, 1)
+
+[node name="Frame" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Layout" type="HBoxContainer" parent="Frame"]
+custom_minimum_size = Vector2(960, 620)
+layout_mode = 2
+theme_override_constants/separation = 11
+alignment = 1
+
+[node name="Play" type="VBoxContainer" parent="Frame/Layout"]
+custom_minimum_size = Vector2(580, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 20
+
+[node name="Header" type="HBoxContainer" parent="Frame/Layout/Play"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="Frame/Layout/Play/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Multi-Wordle"
+
+[node name="Status" type="Label" parent="Frame/Layout/Play/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MutedLabel"
+horizontal_alignment = 2
+autowrap_mode = 2
+
+[node name="Boards" type="VBoxContainer" parent="Frame/Layout/Play"]
+layout_mode = 2
+
+[node name="Heading" type="HBoxContainer" parent="Frame/Layout/Play/Boards"]
+layout_mode = 2
+
+[node name="FocusLabel" type="Label" parent="Frame/Layout/Play/Boards/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "BOARD"
+
+[node name="BoardState" type="Label" parent="Frame/Layout/Play/Boards/Heading"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"MutedLabel"
+horizontal_alignment = 2
+
+[node name="Workspace" type="HBoxContainer" parent="Frame/Layout/Play/Boards"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+
+[node name="Desk" type="HBoxContainer" parent="Frame/Layout/Play/Boards/Workspace"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="BoardStage" type="Control" parent="Frame/Layout/Play/Boards/Workspace/Desk"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="BoardScroll" type="ScrollContainer" parent="Frame/Layout/Play/Boards/Workspace/Desk/BoardStage"]
+unique_name_in_owner = true
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
+
+[node name="GridPadding" type="MarginContainer" parent="Frame/Layout/Play/Boards/Workspace/Desk/BoardStage/BoardScroll"]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 1
+theme_override_constants/margin_bottom = 4
+
+[node name="BoardGrid" type="GridContainer" parent="Frame/Layout/Play/Boards/Workspace/Desk/BoardStage/BoardScroll/GridPadding"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 1
+columns = 5
+
+[node name="PickerSection" type="VBoxContainer" parent="Frame/Layout/Play/Boards/Workspace/Desk"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Frame/Layout/Play/Boards/Workspace/Desk/PickerSection"]
+layout_mode = 2
+text = "BOARDS"
+
+[node name="BoardPicker" type="GridContainer" parent="Frame/Layout/Play/Boards/Workspace/Desk/PickerSection"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 4
+
+[node name="Shortcut" type="Label" parent="Frame/Layout/Play/Boards/Workspace/Desk/PickerSection"]
+layout_mode = 2
+theme_type_variation = &"MutedLabel"
+theme_override_font_sizes/font_size = 14
+text = "TAB: NEXT BOARD
+SHIFT + TAB: PREVIOUS"
+
+[node name="Keyboard" type="VBoxContainer" parent="Frame/Layout/Play"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("3")
+
+[node name="ColumnRule" type="ColorRect" parent="Frame/Layout"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.360784, 0.286275, 0.321569, 1)
+
+[node name="Sidebar" type="PanelContainer" parent="Frame/Layout"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_type_variation = &"SidebarPanel"
+
+[node name="Content" type="VBoxContainer" parent="Frame/Layout/Sidebar"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HintPanel" type="MarginContainer" parent="Frame/Layout/Sidebar/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("2")
+
+[node name="HintScroll" type="ScrollContainer" parent="Frame/Layout/Sidebar/Content/HintPanel"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
+
+[node name="Content" type="VBoxContainer" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="SolverTitle" type="Label" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "SOLVER"
+
+[node name="StateBadges" type="HBoxContainer" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="RecommendationStatus" type="Label" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 2
+
+[node name="Recommendations" type="VBoxContainer" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="TopLettersTitle" type="Label" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "TOP LETTERS"
+
+[node name="FrequentLetters" type="GridContainer" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 3
+
+[node name="CandidateSection" type="VBoxContainer" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="Divider" type="HSeparator" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content/CandidateSection"]
+layout_mode = 2
+
+[node name="CandidateTitle" type="Label" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content/CandidateSection"]
+layout_mode = 2
+text = "POSSIBLE ANSWERS"
+
+[node name="CandidateWords" type="GridContainer" parent="Frame/Layout/Sidebar/Content/HintPanel/HintScroll/Content/CandidateSection"]
+unique_name_in_owner = true
+layout_mode = 2
+columns = 5
+theme_override_constants/v_separation = 3
+
+[node name="SidebarDivider" type="HSeparator" parent="Frame/Layout/Sidebar/Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"SidebarDivider"
+
+[node name="Actions" type="VBoxContainer" parent="Frame/Layout/Sidebar/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="Sound" type="Button" parent="Frame/Layout/Sidebar/Content/Actions"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(102, 34)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+button_pressed = true
+toggle_mode = true
+text = "SOUND: ON"
+script = ExtResource("4")
+
+[node name="Buttons" type="HBoxContainer" parent="Frame/Layout/Sidebar/Content/Actions"]
+layout_mode = 2
+
+[node name="Restart" type="Button" parent="Frame/Layout/Sidebar/Content/Actions/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(102, 34)
+layout_mode = 2
+focus_mode = 0
+text = "RESTART"
+script = ExtResource("4")
+
+[node name="Menu" type="Button" parent="Frame/Layout/Sidebar/Content/Actions/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(102, 34)
+layout_mode = 2
+focus_mode = 0
+text = "MENU"
+script = ExtResource("4")
+
+[node name="ClickAudio" type="AudioStreamPlayer" parent="."]
+unique_name_in_owner = true
