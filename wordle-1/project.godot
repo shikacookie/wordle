@@ -1,0 +1,11 @@
+config_version=5
+
+[application]
+config/name="Wordle1"
+config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
+
+[dotnet]
+project/assembly_name="Wordle1"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
